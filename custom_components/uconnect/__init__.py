@@ -5,9 +5,10 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_PIN, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 
+from .brand_detection import detect_brand
 from .const import (
     BRANDS,
     CONF_BRAND_REGION,
@@ -93,14 +94,20 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             current_brand,
         )
 
-        # Lazy import to avoid a circular dependency at module load time.
-        from .config_flow import _detect_brand  # noqa: PLC0415
+        # Resolve the effective PIN using the same options-first logic as the
+        # coordinator so that a PIN updated in options is honoured here too.
+        pin_options = config_entry.options.get(CONF_PIN)
+        effective_pin = (
+            pin_options
+            if pin_options is not None and pin_options != ""
+            else config_entry.data.get(CONF_PIN, DEFAULT_PIN)
+        )
 
-        new_brand, any_login = await _detect_brand(
+        new_brand, any_login = await detect_brand(
             hass,
             email=config_entry.data.get(CONF_USERNAME, ""),
             password=config_entry.data.get(CONF_PASSWORD, ""),
-            pin=config_entry.data.get(CONF_PIN, DEFAULT_PIN),
+            pin=effective_pin,
             disable_tls_verification=config_entry.data.get(
                 CONF_DISABLE_TLS_VERIFICATION, False
             ),
@@ -128,7 +135,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                     f"Unable to connect to UConnect API after brand update: {e}"
                 ) from e
         elif not any_login:
-            _LOGGER.error(
+            raise ConfigEntryAuthFailed(
                 "Login failed for all known brands. "
                 "Please check your UConnect credentials and reconfigure the integration."
             )

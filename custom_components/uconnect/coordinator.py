@@ -24,7 +24,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import (
     CONF_BRAND_REGION,
     CONF_DISABLE_TLS_VERIFICATION,
-    BRANDS,
     CONF_LOG_LEVEL,
     DEFAULT_LOG_LEVEL,
     DEFAULT_SCAN_INTERVAL,

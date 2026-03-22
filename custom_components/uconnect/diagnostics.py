@@ -24,23 +24,26 @@ async def async_get_config_entry_diagnostics(
 
     coordinator = hass.data[DOMAIN][config_entry.unique_id]
 
-    vehicles: dict[str, Any] = {}
+    vehicles: list[dict[str, Any]] = []
     try:
         for vin, vehicle in coordinator.client.get_vehicles().items():
             # Redact VIN to last four characters to protect privacy.
             redacted_vin = f"**{vin[-4:]}"
-            vehicles[redacted_vin] = {
-                "make": vehicle.make,
-                "model": vehicle.model,
-                "nickname": vehicle.nickname,
-            }
+            vehicles.append(
+                {
+                    "vin": redacted_vin,
+                    "make": vehicle.make,
+                    "model": vehicle.model,
+                    "nickname": vehicle.nickname,
+                }
+            )
     except Exception as err:  # noqa: BLE001
         _LOGGER.debug("Unable to retrieve vehicle list for diagnostics: %s", err)
-        vehicles = {"error": "Unable to retrieve vehicle list"}
+        vehicles = [{"error": "Unable to retrieve vehicle list"}]
 
     return {
         "config_entry": async_redact_data(dict(config_entry.data), TO_REDACT),
-        "options": dict(config_entry.options),
+        "options": async_redact_data(dict(config_entry.options), TO_REDACT),
         "vehicles": vehicles,
         "coordinator": {
             "last_update_success": coordinator.last_update_success,

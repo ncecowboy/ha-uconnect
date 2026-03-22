@@ -24,7 +24,6 @@ from py_uconnect.api import API
 from py_uconnect.brands import BRANDS as BRANDS_BY_NAME
 
 from .const import (
-    BRANDS,
     CONF_BRAND_REGION,
     CONF_DISABLE_TLS_VERIFICATION,
     CONF_ADD_COMMAND_ENTITIES,
@@ -39,7 +38,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_BRAND_REGION): vol.In(BRANDS),
         vol.Optional(CONF_PIN, default=DEFAULT_PIN): str,
         vol.Required(CONF_DISABLE_TLS_VERIFICATION, default=False): bool,
     }
@@ -57,22 +55,63 @@ OPTIONS_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, user_input: dict[str, Any]):
-    """Validate the user input by attempting an API login."""
+async def _detect_brand(
+    hass: HomeAssistant,
+    email: str,
+    password: str,
+    pin: str,
+    disable_tls_verification: bool,
+) -> tuple[str | None, bool]:
+    """Try every known brand to find one where credentials work and vehicles exist.
 
-    try:
-        api = API(
-            email=user_input[CONF_USERNAME],
-            password=user_input[CONF_PASSWORD],
-            pin=user_input[CONF_PIN],
-            brand=BRANDS_BY_NAME[BRANDS[user_input[CONF_BRAND_REGION]]],
-            disable_tls_verification=user_input[CONF_DISABLE_TLS_VERIFICATION],
-        )
+    Returns a tuple of:
+      - brand_name (str): the detected brand name, or None if not found
+      - any_login_succeeded (bool): True if at least one brand accepted the credentials
+    """
+    any_login_succeeded = False
 
-        await hass.async_add_executor_job(api.login)
-    except Exception as e:
-        _LOGGER.exception("Authentication failed: %s", e)
+    for brand in BRANDS_BY_NAME.values():
+        try:
+            api = API(
+                email=email,
+                password=password,
+                pin=pin,
+                brand=brand,
+                disable_tls_verification=disable_tls_verification,
+            )
+            await hass.async_add_executor_job(api.login)
+            any_login_succeeded = True
+            vehicles = await hass.async_add_executor_job(api.list_vehicles)
+            if vehicles:
+                _LOGGER.debug("Auto-detected brand: %s", brand.name)
+                return brand.name, True
+        except Exception as err:
+            _LOGGER.debug(
+                "Brand %s: login or vehicle fetch failed, trying next: %s",
+                brand.name,
+                err,
+            )
+
+    return None, any_login_succeeded
+
+
+async def validate_input(hass: HomeAssistant, user_input: dict[str, Any]) -> str:
+    """Validate credentials, auto-detect the brand, and return the brand name."""
+
+    brand_name, any_login_succeeded = await _detect_brand(
+        hass,
+        email=user_input[CONF_USERNAME],
+        password=user_input[CONF_PASSWORD],
+        pin=user_input.get(CONF_PIN, DEFAULT_PIN),
+        disable_tls_verification=user_input.get(CONF_DISABLE_TLS_VERIFICATION, False),
+    )
+
+    if brand_name is None:
+        if any_login_succeeded:
+            raise NoVehicles
         raise InvalidAuth
+
+    return brand_name
 
 
 class UconnectOptionFlowHandler(config_entries.OptionsFlow):
@@ -125,20 +164,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         try:
-            await validate_input(self.hass, user_input)
+            brand_name = await validate_input(self.hass, user_input)
         except InvalidAuth:
             errors["base"] = "invalid_auth"
+        except NoVehicles:
+            errors["base"] = "no_vehicles"
         except Exception:
             _LOGGER.exception("Unexpected exception during setup")
             errors["base"] = "unknown"
         else:
+            # Persist the auto-detected brand so the coordinator can use it
+            user_input = {**user_input, CONF_BRAND_REGION: brand_name}
+
             if self.reauth_entry is None:
-                title = (
-                    f"{BRANDS[user_input[CONF_BRAND_REGION]]} "
-                    f"{user_input[CONF_USERNAME]}"
-                )
+                title = f"{brand_name} {user_input[CONF_USERNAME]}"
                 await self.async_set_unique_id(
-                    hashlib.sha256(title.encode("utf-8")).hexdigest()
+                    hashlib.sha256(user_input[CONF_USERNAME].encode("utf-8")).hexdigest()
                 )
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=title, data=user_input)
@@ -172,3 +213,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
+
+
+class NoVehicles(HomeAssistantError):
+    """Error to indicate credentials are valid but no vehicles were found."""

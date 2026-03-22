@@ -22,9 +22,11 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
+    # BRANDS is retained solely for backward compatibility: config entries created
+    # before auto-detection stored the brand as an integer key into this dict.
+    BRANDS,
     CONF_BRAND_REGION,
     CONF_DISABLE_TLS_VERIFICATION,
-    BRANDS,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
@@ -47,11 +49,28 @@ class UconnectDataUpdateCoordinator(DataUpdateCoordinator):
         else:
             pin = config_entry.data.get(CONF_PIN)
 
+        # Resolve brand: new entries store the brand name string directly;
+        # legacy entries (created before auto-detection) stored an integer key.
+        brand_value = config_entry.data.get(CONF_BRAND_REGION)
+        if isinstance(brand_value, int):
+            brand_value = BRANDS.get(brand_value)
+            if brand_value is None:
+                raise ValueError(
+                    f"Legacy config entry has an unrecognised brand key: "
+                    f"{config_entry.data.get(CONF_BRAND_REGION)}. "
+                    "Please reconfigure the integration."
+                )
+        brand = BRANDS_BY_NAME.get(brand_value)
+        if brand is None:
+            raise ValueError(
+                f"Unknown brand '{brand_value}'. Please reconfigure the integration."
+            )
+
         self.client = Client(
             email=config_entry.data.get(CONF_USERNAME),
             password=config_entry.data.get(CONF_PASSWORD),
             pin=pin,
-            brand=BRANDS_BY_NAME[BRANDS[config_entry.data.get(CONF_BRAND_REGION)]],
+            brand=brand,
             disable_tls_verification=config_entry.data.get(
                 CONF_DISABLE_TLS_VERIFICATION
             ),

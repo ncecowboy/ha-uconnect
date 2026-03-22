@@ -21,9 +21,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 
-from py_uconnect.api import API
-from py_uconnect.brands import BRANDS as BRANDS_BY_NAME
-
+from .brand_detection import detect_brand
 from .const import (
     CONF_BRAND_REGION,
     CONF_DISABLE_TLS_VERIFICATION,
@@ -69,50 +67,10 @@ OPTIONS_SCHEMA = vol.Schema(
 )
 
 
-async def _detect_brand(
-    hass: HomeAssistant,
-    email: str,
-    password: str,
-    pin: str,
-    disable_tls_verification: bool,
-) -> tuple[str | None, bool]:
-    """Try every known brand to find one where credentials work and vehicles exist.
-
-    Returns a tuple of:
-      - brand_name (str): the detected brand name, or None if not found
-      - any_login_succeeded (bool): True if at least one brand accepted the credentials
-    """
-    any_login_succeeded = False
-
-    for brand in BRANDS_BY_NAME.values():
-        try:
-            api = API(
-                email=email,
-                password=password,
-                pin=pin,
-                brand=brand,
-                disable_tls_verification=disable_tls_verification,
-            )
-            await hass.async_add_executor_job(api.login)
-            any_login_succeeded = True
-            vehicles = await hass.async_add_executor_job(api.list_vehicles)
-            if vehicles:
-                _LOGGER.debug("Auto-detected brand: %s", brand.name)
-                return brand.name, True
-        except Exception as err:
-            _LOGGER.debug(
-                "Brand %s: login or vehicle fetch failed, trying next: %s",
-                brand.name,
-                err,
-            )
-
-    return None, any_login_succeeded
-
-
 async def validate_input(hass: HomeAssistant, user_input: dict[str, Any]) -> str:
     """Validate credentials, auto-detect the brand, and return the brand name."""
 
-    brand_name, any_login_succeeded = await _detect_brand(
+    brand_name, any_login_succeeded = await detect_brand(
         hass,
         email=user_input[CONF_USERNAME],
         password=user_input[CONF_PASSWORD],

@@ -24,7 +24,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import (
     CONF_BRAND_REGION,
     CONF_DISABLE_TLS_VERIFICATION,
-    BRANDS,
+    CONF_LOG_LEVEL,
+    DEFAULT_LOG_LEVEL,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
@@ -40,6 +41,12 @@ class UconnectDataUpdateCoordinator(DataUpdateCoordinator):
         self.platforms: set[str] = set()
         self.extrapolated_soc_sensors: dict = {}
 
+        # Remember which log level was active at initialization so that
+        # update_options can detect a change and trigger a reload.
+        self._applied_log_level: str = config_entry.options.get(
+            CONF_LOG_LEVEL, DEFAULT_LOG_LEVEL
+        )
+
         # Prefer PIN from options; fall back to initial config data
         pin_options = config_entry.options.get(CONF_PIN)
         if pin_options is not None and pin_options != "":
@@ -51,7 +58,7 @@ class UconnectDataUpdateCoordinator(DataUpdateCoordinator):
             email=config_entry.data.get(CONF_USERNAME),
             password=config_entry.data.get(CONF_PASSWORD),
             pin=pin,
-            brand=BRANDS_BY_NAME[BRANDS[config_entry.data.get(CONF_BRAND_REGION)]],
+            brand=BRANDS_BY_NAME[config_entry.data.get(CONF_BRAND_REGION)],
             disable_tls_verification=config_entry.data.get(
                 CONF_DISABLE_TLS_VERIFICATION
             ),
@@ -109,7 +116,19 @@ class UconnectDataUpdateCoordinator(DataUpdateCoordinator):
             raise HomeAssistantError("Set charging level failed")
 
     async def update_options(self, hass: HomeAssistant, config_entry: ConfigEntry):
-        """Handle options updates (e.g. scan interval changes)."""
+        """Handle options updates (e.g. scan interval or log level changes)."""
+        new_log_level = config_entry.options.get(CONF_LOG_LEVEL, DEFAULT_LOG_LEVEL)
+        if new_log_level != self._applied_log_level:
+            # Log level changed — reload the entire entry so the new level is
+            # applied cleanly at startup and all components pick it up.
+            _LOGGER.debug(
+                "Log level changed (%s → %s); reloading integration",
+                self._applied_log_level,
+                new_log_level,
+            )
+            await hass.config_entries.async_reload(config_entry.entry_id)
+            return
+
         self.update_interval = timedelta(
             seconds=config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
             * 60

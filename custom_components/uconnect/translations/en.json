@@ -4,11 +4,10 @@
         "step": {
             "user": {
                 "title": "UConnect API Authentication",
-                "description": "Connect your UConnect-enabled Stellantis vehicle (Jeep, RAM, Dodge, Chrysler, Fiat, Alfa Romeo, Maserati) to Home Assistant using your T-Mobile UConnect account credentials.",
+                "description": "Connect your UConnect-enabled Stellantis vehicle (Jeep, RAM, Dodge, Chrysler, Fiat, Alfa Romeo, Maserati) to Home Assistant using your UConnect account credentials. The integration will automatically detect your vehicle brand and region.",
                 "data": {
                     "username": "Username / Email",
                     "password": "Password",
-                    "brand_region": "Brand + Region",
                     "pin": "Security PIN (optional)",
                     "disable_tls_verification": "Disable TLS certificate verification"
                 }
@@ -24,6 +23,7 @@
         },
         "error": {
             "invalid_auth": "Authentication failed. Check your credentials and ensure your vehicle uses UConnect (not SiriusXM Guardian).",
+            "no_vehicles": "Login succeeded but no vehicles were found on this account. Ensure your vehicle is registered in the UConnect portal.",
             "unknown": "An unexpected error occurred. Check the Home Assistant logs."
         }
     },

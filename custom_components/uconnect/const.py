@@ -55,4 +55,7 @@ BRANDS = {
 DEFAULT_PIN: str = ""
 DEFAULT_SCAN_INTERVAL: int = 5
 
+CONF_LOG_LEVEL: str = "log_level"
+DEFAULT_LOG_LEVEL: str = "warning"
+
 UNIT_DYNAMIC: str = "dynamic"

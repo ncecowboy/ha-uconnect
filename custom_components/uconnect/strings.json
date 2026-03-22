@@ -1,0 +1,193 @@
+{
+    "title": "UConnect (T-Mobile)",
+    "config": {
+        "step": {
+            "user": {
+                "title": "UConnect API Authentication",
+                "description": "Connect your UConnect-enabled Stellantis vehicle (Jeep, RAM, Dodge, Chrysler, Fiat, Alfa Romeo, Maserati) to Home Assistant using your T-Mobile UConnect account credentials.",
+                "data": {
+                    "username": "Username / Email",
+                    "password": "Password",
+                    "brand_region": "Brand + Region",
+                    "pin": "Security PIN (optional)",
+                    "disable_tls_verification": "Disable TLS certificate verification"
+                }
+            },
+            "reauth_confirm": {
+                "title": "Re-authenticate UConnect",
+                "description": "Your UConnect session has expired. Click Submit to reauthenticate."
+            }
+        },
+        "abort": {
+            "already_configured": "This account is already configured.",
+            "reauth_successful": "Re-authentication was successful."
+        },
+        "error": {
+            "invalid_auth": "Authentication failed. Check your credentials and ensure your vehicle uses UConnect (not SiriusXM Guardian).",
+            "unknown": "An unexpected error occurred. Check the Home Assistant logs."
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "UConnect Integration Options",
+                "data": {
+                    "scan_interval": "Poll interval (minutes)",
+                    "pin": "Security PIN (leave blank to use initial value)",
+                    "add_command_entities": "Add command entities (Button / Lock / Switch / Select)"
+                }
+            }
+        }
+    },
+    "services": {
+        "update": {
+            "name": "Update",
+            "description": "Refresh vehicle data from the UConnect cloud.",
+            "fields": {
+                "device_id": {
+                    "name": "Vehicle",
+                    "description": "Target vehicle"
+                }
+            }
+        },
+        "engine_on": {
+            "name": "Engine - Turn On",
+            "description": "Remotely start the engine.",
+            "fields": {
+                "device_id": {
+                    "name": "Vehicle",
+                    "description": "Target vehicle"
+                }
+            }
+        },
+        "engine_off": {
+            "name": "Engine - Turn Off",
+            "description": "Remotely stop the engine.",
+            "fields": {
+                "device_id": {
+                    "name": "Vehicle",
+                    "description": "Target vehicle"
+                }
+            }
+        },
+        "comfort_on": {
+            "name": "Comfort - Turn On",
+            "description": "Turn on comfort mode.",
+            "fields": {
+                "device_id": { "name": "Vehicle", "description": "Target vehicle" }
+            }
+        },
+        "comfort_off": {
+            "name": "Comfort - Turn Off",
+            "description": "Turn off comfort mode.",
+            "fields": {
+                "device_id": { "name": "Vehicle", "description": "Target vehicle" }
+            }
+        },
+        "hvac_on": {
+            "name": "HVAC - Turn On",
+            "description": "Turn on air conditioning.",
+            "fields": {
+                "device_id": { "name": "Vehicle", "description": "Target vehicle" }
+            }
+        },
+        "hvac_off": {
+            "name": "HVAC - Turn Off",
+            "description": "Turn off air conditioning.",
+            "fields": {
+                "device_id": { "name": "Vehicle", "description": "Target vehicle" }
+            }
+        },
+        "precond_on": {
+            "name": "Precond - Turn On",
+            "description": "Start vehicle preconditioning.",
+            "fields": {
+                "device_id": { "name": "Vehicle", "description": "Target vehicle" }
+            }
+        },
+        "precond_off": {
+            "name": "Precond - Turn Off",
+            "description": "Stop vehicle preconditioning.",
+            "fields": {
+                "device_id": { "name": "Vehicle", "description": "Target vehicle" }
+            }
+        },
+        "lights": {
+            "name": "Lights",
+            "description": "Flash the vehicle lights.",
+            "fields": {
+                "device_id": { "name": "Vehicle", "description": "Target vehicle" }
+            }
+        },
+        "lights_horn": {
+            "name": "Lights and Horn",
+            "description": "Flash the lights and sound the horn.",
+            "fields": {
+                "device_id": { "name": "Vehicle", "description": "Target vehicle" }
+            }
+        },
+        "doors_lock": {
+            "name": "Doors Lock",
+            "description": "Lock all vehicle doors.",
+            "fields": {
+                "device_id": { "name": "Vehicle", "description": "Target vehicle" }
+            }
+        },
+        "doors_unlock": {
+            "name": "Doors Unlock",
+            "description": "Unlock all vehicle doors.",
+            "fields": {
+                "device_id": { "name": "Vehicle", "description": "Target vehicle" }
+            }
+        },
+        "trunk_lock": {
+            "name": "Trunk Lock",
+            "description": "Lock the trunk.",
+            "fields": {
+                "device_id": { "name": "Vehicle", "description": "Target vehicle" }
+            }
+        },
+        "trunk_unlock": {
+            "name": "Trunk Unlock",
+            "description": "Unlock the trunk.",
+            "fields": {
+                "device_id": { "name": "Vehicle", "description": "Target vehicle" }
+            }
+        },
+        "liftgate_lock": {
+            "name": "Liftgate Lock",
+            "description": "Lock the liftgate.",
+            "fields": {
+                "device_id": { "name": "Vehicle", "description": "Target vehicle" }
+            }
+        },
+        "liftgate_unlock": {
+            "name": "Liftgate Unlock",
+            "description": "Unlock the liftgate.",
+            "fields": {
+                "device_id": { "name": "Vehicle", "description": "Target vehicle" }
+            }
+        },
+        "charge_now": {
+            "name": "Charge Now",
+            "description": "Start charging the vehicle battery.",
+            "fields": {
+                "device_id": { "name": "Vehicle", "description": "Target vehicle" }
+            }
+        },
+        "deep_refresh": {
+            "name": "Deep Refresh",
+            "description": "Force-update vehicle charge level and parameters.",
+            "fields": {
+                "device_id": { "name": "Vehicle", "description": "Target vehicle" }
+            }
+        },
+        "refresh_location": {
+            "name": "Location Refresh",
+            "description": "Request an updated GPS location from the vehicle.",
+            "fields": {
+                "device_id": { "name": "Vehicle", "description": "Target vehicle" }
+            }
+        }
+    }
+}

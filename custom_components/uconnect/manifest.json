@@ -1,0 +1,21 @@
+{
+    "domain": "uconnect",
+    "name": "UConnect (T-Mobile)",
+    "codeowners": [
+        "@ncecowboy"
+    ],
+    "config_flow": true,
+    "documentation": "https://github.com/ncecowboy/ha-uconnect",
+    "integration_type": "hub",
+    "iot_class": "cloud_polling",
+    "issue_tracker": "https://github.com/ncecowboy/ha-uconnect/issues",
+    "loggers": [
+        "uconnect",
+        "py_uconnect",
+        "custom_components.uconnect"
+    ],
+    "requirements": [
+        "py-uconnect==0.3.11"
+    ],
+    "version": "1.0.0"
+}

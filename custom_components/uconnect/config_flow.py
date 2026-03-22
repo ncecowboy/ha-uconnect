@@ -41,12 +41,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_BRAND_REGION): selector.SelectSelector(
-            selector.SelectSelectorConfig(
-                options=list(BRANDS.values()),
-                mode=selector.SelectSelectorMode.DROPDOWN,
-            )
-        ),
         vol.Optional(CONF_PIN, default=DEFAULT_PIN): str,
         vol.Required(CONF_DISABLE_TLS_VERIFICATION, default=False): bool,
     }
@@ -114,14 +108,6 @@ async def _detect_brand(
 
     return None, any_login_succeeded
 
-    try:
-        api = API(
-            email=user_input[CONF_USERNAME],
-            password=user_input[CONF_PASSWORD],
-            pin=user_input[CONF_PIN],
-            brand=BRANDS_BY_NAME[user_input[CONF_BRAND_REGION]],
-            disable_tls_verification=user_input[CONF_DISABLE_TLS_VERIFICATION],
-        )
 
 async def validate_input(hass: HomeAssistant, user_input: dict[str, Any]) -> str:
     """Validate credentials, auto-detect the brand, and return the brand name."""
@@ -206,10 +192,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if self.reauth_entry is None:
                 title = f"{brand_name} {user_input[CONF_USERNAME]}"
-                title = (
-                    f"{user_input[CONF_BRAND_REGION]} "
-                    f"{user_input[CONF_USERNAME]}"
-                )
                 await self.async_set_unique_id(
                     hashlib.sha256(user_input[CONF_USERNAME].encode("utf-8")).hexdigest()
                 )

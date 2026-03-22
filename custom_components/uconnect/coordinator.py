@@ -79,7 +79,6 @@ class UconnectDataUpdateCoordinator(DataUpdateCoordinator):
             password=config_entry.data.get(CONF_PASSWORD),
             pin=pin,
             brand=brand,
-            brand=BRANDS_BY_NAME[config_entry.data.get(CONF_BRAND_REGION)],
             disable_tls_verification=config_entry.data.get(
                 CONF_DISABLE_TLS_VERIFICATION
             ),

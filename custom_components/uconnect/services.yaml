@@ -1,0 +1,239 @@
+update:
+  name: Update
+  description: Refresh vehicle data from the UConnect cloud.
+  fields:
+    device_id:
+      name: Vehicle
+      description: Target vehicle device.
+      required: false
+      selector:
+        device:
+          integration: uconnect
+
+engine_on:
+  name: Engine - Turn On
+  description: Remotely start the engine.
+  fields:
+    device_id:
+      name: Vehicle
+      description: Target vehicle device.
+      required: false
+      selector:
+        device:
+          integration: uconnect
+
+engine_off:
+  name: Engine - Turn Off
+  description: Remotely stop the engine.
+  fields:
+    device_id:
+      name: Vehicle
+      description: Target vehicle device.
+      required: false
+      selector:
+        device:
+          integration: uconnect
+
+comfort_on:
+  name: Comfort - Turn On
+  description: Turn on comfort mode.
+  fields:
+    device_id:
+      name: Vehicle
+      description: Target vehicle device.
+      required: false
+      selector:
+        device:
+          integration: uconnect
+
+comfort_off:
+  name: Comfort - Turn Off
+  description: Turn off comfort mode.
+  fields:
+    device_id:
+      name: Vehicle
+      description: Target vehicle device.
+      required: false
+      selector:
+        device:
+          integration: uconnect
+
+hvac_on:
+  name: HVAC - Turn On
+  description: Turn on the air conditioning.
+  fields:
+    device_id:
+      name: Vehicle
+      description: Target vehicle device.
+      required: false
+      selector:
+        device:
+          integration: uconnect
+
+hvac_off:
+  name: HVAC - Turn Off
+  description: Turn off the air conditioning.
+  fields:
+    device_id:
+      name: Vehicle
+      description: Target vehicle device.
+      required: false
+      selector:
+        device:
+          integration: uconnect
+
+precond_on:
+  name: Precond - Turn On
+  description: Start vehicle preconditioning (climate preparation).
+  fields:
+    device_id:
+      name: Vehicle
+      description: Target vehicle device.
+      required: false
+      selector:
+        device:
+          integration: uconnect
+
+precond_off:
+  name: Precond - Turn Off
+  description: Stop vehicle preconditioning.
+  fields:
+    device_id:
+      name: Vehicle
+      description: Target vehicle device.
+      required: false
+      selector:
+        device:
+          integration: uconnect
+
+lights:
+  name: Lights
+  description: Flash the vehicle lights.
+  fields:
+    device_id:
+      name: Vehicle
+      description: Target vehicle device.
+      required: false
+      selector:
+        device:
+          integration: uconnect
+
+lights_horn:
+  name: Lights and Horn
+  description: Flash the lights and sound the horn.
+  fields:
+    device_id:
+      name: Vehicle
+      description: Target vehicle device.
+      required: false
+      selector:
+        device:
+          integration: uconnect
+
+doors_lock:
+  name: Doors Lock
+  description: Lock all vehicle doors.
+  fields:
+    device_id:
+      name: Vehicle
+      description: Target vehicle device.
+      required: false
+      selector:
+        device:
+          integration: uconnect
+
+doors_unlock:
+  name: Doors Unlock
+  description: Unlock all vehicle doors.
+  fields:
+    device_id:
+      name: Vehicle
+      description: Target vehicle device.
+      required: false
+      selector:
+        device:
+          integration: uconnect
+
+trunk_lock:
+  name: Trunk Lock
+  description: Lock the trunk.
+  fields:
+    device_id:
+      name: Vehicle
+      description: Target vehicle device.
+      required: false
+      selector:
+        device:
+          integration: uconnect
+
+trunk_unlock:
+  name: Trunk Unlock
+  description: Unlock the trunk.
+  fields:
+    device_id:
+      name: Vehicle
+      description: Target vehicle device.
+      required: false
+      selector:
+        device:
+          integration: uconnect
+
+liftgate_lock:
+  name: Liftgate Lock
+  description: Lock the liftgate.
+  fields:
+    device_id:
+      name: Vehicle
+      description: Target vehicle device.
+      required: false
+      selector:
+        device:
+          integration: uconnect
+
+liftgate_unlock:
+  name: Liftgate Unlock
+  description: Unlock the liftgate.
+  fields:
+    device_id:
+      name: Vehicle
+      description: Target vehicle device.
+      required: false
+      selector:
+        device:
+          integration: uconnect
+
+charge_now:
+  name: Charge Now
+  description: Start charging the vehicle battery.
+  fields:
+    device_id:
+      name: Vehicle
+      description: Target vehicle device.
+      required: false
+      selector:
+        device:
+          integration: uconnect
+
+deep_refresh:
+  name: Deep Refresh
+  description: Force-update vehicle charge level and parameters from the vehicle itself.
+  fields:
+    device_id:
+      name: Vehicle
+      description: Target vehicle device.
+      required: false
+      selector:
+        device:
+          integration: uconnect
+
+refresh_location:
+  name: Location Refresh
+  description: Request an updated GPS location from the vehicle.
+  fields:
+    device_id:
+      name: Vehicle
+      description: Target vehicle device.
+      required: false
+      selector:
+        device:
+          integration: uconnect

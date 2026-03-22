@@ -23,7 +23,7 @@
         },
         "error": {
             "invalid_auth": "Authentication failed. Check your credentials and ensure your vehicle uses UConnect (not SiriusXM Guardian).",
-            "no_vehicles": "Login succeeded but no vehicles were found on this account. Ensure your vehicle is registered in the UConnect portal.",
+            "no_vehicles": "Login succeeded but no vehicles were found. Ensure your vehicle appears in the official Uconnect app. For 2013–2018 Dodge/Chrysler vehicles, see the README Troubleshooting section for legacy UConnect Access guidance.",
             "unknown": "An unexpected error occurred. Check the Home Assistant logs."
         }
     },

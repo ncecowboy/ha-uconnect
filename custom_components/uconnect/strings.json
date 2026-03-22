@@ -23,7 +23,7 @@
         },
         "error": {
             "invalid_auth": "Authentication failed. Check your credentials and ensure your vehicle uses UConnect (not SiriusXM Guardian).",
-            "no_vehicles": "Login succeeded but no vehicles were found. If you have a 2013–2018 Dodge/Chrysler vehicle with the T-Mobile 4G OBD Adapter, ensure the adapter is activated and your vehicle appears in the official Uconnect app first. See the README Troubleshooting section for details on legacy UConnect Access vehicles.",
+            "no_vehicles": "Login succeeded but no vehicles were found. Ensure your vehicle appears in the official Uconnect app. For 2013–2018 Dodge/Chrysler vehicles, see the README Troubleshooting section for legacy UConnect Access guidance.",
             "unknown": "An unexpected error occurred. Check the Home Assistant logs."
         }
     },

@@ -217,7 +217,7 @@ The following models are supported via the legacy detection path:
 | Brand | Models | Years |
 |-------|--------|-------|
 | **Dodge** | Charger, Challenger, Durango | 2013–2018 |
-| **Chrysler** | 300, Pacifica, Town & Country | 2013–2018 |
+| **Chrysler** | 300, Town & Country (2013–2016), Pacifica (2017–2018) | 2013–2018 |
 | **Ram** | 1500, 2500, 3500 | 2013–2018 |
 | **Jeep** | Grand Cherokee, Cherokee, Wrangler, Compass, Renegade | 2014–2018 |
 

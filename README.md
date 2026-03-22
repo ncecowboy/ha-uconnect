@@ -16,11 +16,12 @@ A [Home Assistant](https://www.home-assistant.io/) custom integration for **Stel
 1. [Features](#features)
 2. [T-Mobile 4G OBD Adapter Compatibility](#t-mobile-4g-obd-adapter-compatibility)
 3. [Supported Brands & Regions](#supported-brands--regions)
-4. [Requirements](#requirements)
-5. [Installation via HACS](#installation-via-hacs)
-6. [Manual Installation](#manual-installation)
-7. [Configuration](#configuration)
-8. [Entities](#entities)
+4. [Legacy UConnect Access Support](#legacy-uconnect-access-support)
+5. [Requirements](#requirements)
+6. [Installation via HACS](#installation-via-hacs)
+7. [Manual Installation](#manual-installation)
+8. [Configuration](#configuration)
+9. [Entities](#entities)
    - [Sensors](#sensors)
    - [Binary Sensors](#binary-sensors)
    - [Device Tracker](#device-tracker)
@@ -28,13 +29,14 @@ A [Home Assistant](https://www.home-assistant.io/) custom integration for **Stel
    - [Switches](#switches)
    - [Buttons](#buttons)
    - [Select](#select)
-9. [Services](#services)
-10. [API Data Model](#api-data-model)
-11. [Advanced: Extrapolated Battery SOC](#advanced-extrapolated-battery-soc)
-12. [Options](#options)
-13. [Troubleshooting](#troubleshooting)
-14. [Contributing](#contributing)
-15. [License](#license)
+10. [Services](#services)
+11. [API Data Model](#api-data-model)
+12. [Advanced: Extrapolated Battery SOC](#advanced-extrapolated-battery-soc)
+13. [Options](#options)
+14. [Troubleshooting](#troubleshooting)
+15. [Contributing](#contributing)
+16. [License](#license)
+
 
 ---
 
@@ -157,6 +159,69 @@ The brands and regions below correspond to the UConnect cloud API endpoints used
 
 > **✅ Primary target** — these US brands are the ones the T-Mobile 4G OBD Adapter was designed for.  
 > All other brands connect to the same UConnect cloud architecture and are fully supported by the integration, but are not typically paired with the T-Mobile OBD hardware.
+
+---
+
+## Legacy UConnect Access Support
+
+### Background
+
+Stellantis vehicles from **2013–2018** shipped with the original **UConnect Access** system,
+which used Sprint's 3G cellular network.  When Sprint's 3G network was retired in 2022,
+these vehicles lost remote connectivity unless owners installed the T-Mobile 4G OBD Adapter.
+
+The older UConnect Access platform used **different Gigya authentication API keys** from the
+current Stellantis GSDP system:
+
+| Era | Login Domain | Gigya Tenant |
+|-----|-------------|--------------|
+| **UConnect Access (2013–2018)** | `connect.ramtrucks.com`, `connect.dodge.com`, `connect.chrysler.com`, `connect.jeep.com` | Legacy — older Stellantis Gigya site |
+| **Stellantis GSDP (2019+)** | `login-us.ramtrucks.com`, `login-us.dodge.com`, etc. | Current — modern GSDP platform |
+
+Because these are separate Gigya tenants, a vehicle enrolled on the legacy portal may
+not appear when the integration authenticates via the newer GSDP Gigya tenant — even
+if login succeeds.
+
+### Automatic Legacy Detection
+
+This integration automatically handles legacy UConnect Access vehicles by:
+
+1. **First** trying all current Stellantis GSDP brands (the 17 standard py-uconnect brands).
+2. **If no vehicles are found**, falling back to **legacy brand variants** that use the older
+   Gigya authentication keys from the UConnect Access era.
+
+The following legacy variants are tried automatically:
+
+| Legacy Brand | Covers | Older Portal |
+|-------------|--------|-------------|
+| `DODGE_US_LEGACY` | 2013–2018 Dodge Charger, Challenger, Durango | `connect.dodge.com` |
+| `CHRYSLER_US_LEGACY` | 2013–2018 Chrysler 300, Pacifica | `connect.chrysler.com` |
+
+> **Note for Ram and Jeep owners**: The Ram and Jeep US brands use the same Gigya
+> authentication keys across both the legacy and current systems, so a separate legacy
+> variant is not needed for those brands.
+
+### What to Do If Your Vehicle Still Does Not Appear
+
+If the integration still shows "no vehicles found" after the automatic legacy detection:
+
+1. Verify your vehicle is visible in the official **Uconnect app** on your phone.
+2. Ensure the T-Mobile 4G OBD Adapter is **activated** (solid green LED) before setting up this integration.
+3. Re-register your vehicle via the Uconnect app: remove it, then add it again using the VIN.
+4. If the vehicle shows in the Uconnect app but not here, open a [GitHub issue](https://github.com/ncecowboy/ha-uconnect/issues) with your HA debug logs.
+
+### Supported 2013–2018 Models (Legacy UConnect Access)
+
+The following models are supported via the legacy detection path:
+
+| Brand | Models | Years |
+|-------|--------|-------|
+| **Dodge** | Charger, Challenger, Durango | 2013–2018 |
+| **Chrysler** | 300, Pacifica, Town & Country | 2013–2018 |
+| **Ram** | 1500, 2500, 3500 | 2013–2018 |
+| **Jeep** | Grand Cherokee, Cherokee, Wrangler, Compass, Renegade | 2014–2018 |
+
+> Exact support depends on the UConnect hardware version installed in the vehicle and whether an active subscription is present.
 
 ---
 
@@ -416,6 +481,68 @@ After initial setup, click **Configure** on the integration card to adjust:
 - Verify your UConnect email and password are correct.
 - Ensure your vehicle uses **UConnect** (T-Mobile), not the older SiriusXM Guardian system.
 - Check the Home Assistant logs at **Settings → System → Logs** for details.
+
+### "Login succeeded but no vehicles were found"
+
+This is the most common issue for owners of **2013–2018 era vehicles** (Ram, Dodge, Chrysler, Jeep) that originally used the 3G UConnect Access system.
+
+#### What is happening?
+
+Stellantis has two overlapping account systems:
+
+| System | Era | Portal | Backend |
+|--------|-----|--------|---------|
+| **UConnect Access (legacy)** | 2013–2018 | `connect.ramtrucks.com`, `connect.dodge.com`, `connect.chrysler.com`, `connect.jeep.com` | Older Gigya auth tenant |
+| **Stellantis GSDP (current)** | 2019+ / OBD Adapter | `login-us.ramtrucks.com`, etc. | Newer GSDP Gigya auth tenant |
+
+If your vehicle was originally enrolled on the older UConnect Access portal, its
+registration may be tied to the **legacy Gigya authentication tenant**.  The newer
+GSDP API will authenticate you successfully (login succeeds), but returns an empty
+vehicle list because your vehicle's data lives in the legacy system.
+
+#### Step-by-step resolution
+
+1. **Verify your vehicle appears in the Uconnect app**  
+   Open the official [Uconnect app](https://www.driveuconnect.com/) on your phone and confirm your vehicle is listed. If it is not visible there, the integration cannot see it either.
+
+2. **Confirm you are using the correct portal**  
+   Log in to the brand-specific portal for your vehicle and verify your vehicle appears:
+   - Ram: [connect.ramtrucks.com](https://connect.ramtrucks.com)
+   - Dodge: [connect.dodge.com](https://connect.dodge.com)
+   - Chrysler: [connect.chrysler.com](https://connect.chrysler.com)
+   - Jeep: [connect.jeep.com](https://connect.jeep.com)
+
+3. **For T-Mobile 4G OBD Adapter users** — ensure the adapter is fully activated:
+   - Plug the OBD adapter into the OBD-II port (driver's side, under the dash).
+   - Turn ignition to **Run/On**.
+   - Wait up to **15 minutes** for the adapter LED to turn **solid green**.
+   - Open the official Uconnect app and confirm your vehicle appears there.
+   - Only then retry this Home Assistant integration.
+
+4. **Legacy UConnect Access fallback (automatic)**  
+   Starting with version 1.4.0, the integration automatically tries the older
+   UConnect Access Gigya authentication keys for Dodge and Chrysler vehicles.
+   If your vehicle is on the legacy Dodge or Chrysler account system, it will
+   now be detected automatically — no extra configuration needed.
+
+5. **Re-register your vehicle on the GSDP system**  
+   If your vehicle was on the old 3G system and you have the T-Mobile OBD adapter
+   installed, you may need to re-register through the Uconnect app:
+   - Remove the vehicle from your Uconnect account.
+   - Re-add it via the Uconnect app using the VIN.
+   - Once visible in the app, retry the integration.
+
+#### Legacy UConnect Access — Technical Background
+
+The original UConnect Access system (Sprint 3G era) used dedicated Gigya API keys
+for each brand portal.  When Stellantis migrated to the current GSDP platform, new
+API keys were assigned to consolidated login endpoints (`login-us.*.com`).  Some
+older vehicle registrations were not fully migrated and remain tied to the older
+Gigya tenant keys.
+
+This integration's legacy detection phase tries the older authentication keys as a
+fallback.  If your vehicle is successfully found via a legacy key, the brand name
+stored in Home Assistant will show a `_LEGACY` suffix (e.g., `DODGE_US_LEGACY`).
 
 ### No entities appear after setup
 - Check the logs for errors during the first data fetch.

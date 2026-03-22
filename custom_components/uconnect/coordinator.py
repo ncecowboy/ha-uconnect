@@ -32,6 +32,11 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
+from .legacy_brands import LEGACY_BRANDS
+
+# Merge legacy brands into the lookup used by the coordinator so that config
+# entries stored with a legacy brand name can be resolved at startup.
+_ALL_BRANDS_BY_NAME = {**BRANDS_BY_NAME, **LEGACY_BRANDS}
 
 _LOGGER = logging.getLogger(DOMAIN)
 
@@ -68,7 +73,7 @@ class UconnectDataUpdateCoordinator(DataUpdateCoordinator):
                     f"{config_entry.data.get(CONF_BRAND_REGION)}. "
                     "Please reconfigure the integration."
                 )
-        brand = BRANDS_BY_NAME.get(brand_value)
+        brand = _ALL_BRANDS_BY_NAME.get(brand_value)
         if brand is None:
             raise ValueError(
                 f"Unknown brand '{brand_value}'. Please reconfigure the integration."

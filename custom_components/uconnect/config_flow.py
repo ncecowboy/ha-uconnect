@@ -19,6 +19,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import selector
 
 from py_uconnect.api import API
 from py_uconnect.brands import BRANDS as BRANDS_BY_NAME
@@ -27,6 +28,8 @@ from .const import (
     CONF_BRAND_REGION,
     CONF_DISABLE_TLS_VERIFICATION,
     CONF_ADD_COMMAND_ENTITIES,
+    CONF_LOG_LEVEL,
+    DEFAULT_LOG_LEVEL,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_PIN,
     DOMAIN,
@@ -38,6 +41,12 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
+        vol.Required(CONF_BRAND_REGION): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=list(BRANDS.values()),
+                mode=selector.SelectSelectorMode.DROPDOWN,
+            )
+        ),
         vol.Optional(CONF_PIN, default=DEFAULT_PIN): str,
         vol.Required(CONF_DISABLE_TLS_VERIFICATION, default=False): bool,
     }
@@ -51,6 +60,17 @@ OPTIONS_SCHEMA = vol.Schema(
         ): vol.All(vol.Coerce(int), vol.Range(min=1, max=999)),
         vol.Optional(CONF_PIN, default=DEFAULT_PIN): str,
         vol.Required(CONF_ADD_COMMAND_ENTITIES, default=False): bool,
+        vol.Optional(CONF_LOG_LEVEL, default=DEFAULT_LOG_LEVEL): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=[
+                    selector.SelectOptionDict(value="debug", label="Debug"),
+                    selector.SelectOptionDict(value="info", label="Info"),
+                    selector.SelectOptionDict(value="warning", label="Warning"),
+                    selector.SelectOptionDict(value="error", label="Error"),
+                ],
+                mode=selector.SelectSelectorMode.DROPDOWN,
+            )
+        ),
     }
 )
 
@@ -94,6 +114,14 @@ async def _detect_brand(
 
     return None, any_login_succeeded
 
+    try:
+        api = API(
+            email=user_input[CONF_USERNAME],
+            password=user_input[CONF_PASSWORD],
+            pin=user_input[CONF_PIN],
+            brand=BRANDS_BY_NAME[user_input[CONF_BRAND_REGION]],
+            disable_tls_verification=user_input[CONF_DISABLE_TLS_VERIFICATION],
+        )
 
 async def validate_input(hass: HomeAssistant, user_input: dict[str, Any]) -> str:
     """Validate credentials, auto-detect the brand, and return the brand name."""
@@ -142,7 +170,7 @@ class UconnectOptionFlowHandler(config_entries.OptionsFlow):
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for UConnect (T-Mobile)."""
 
-    VERSION = 1
+    VERSION = 2
     reauth_entry: ConfigEntry | None = None
 
     @staticmethod
@@ -178,6 +206,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if self.reauth_entry is None:
                 title = f"{brand_name} {user_input[CONF_USERNAME]}"
+                title = (
+                    f"{user_input[CONF_BRAND_REGION]} "
+                    f"{user_input[CONF_USERNAME]}"
+                )
                 await self.async_set_unique_id(
                     hashlib.sha256(user_input[CONF_USERNAME].encode("utf-8")).hexdigest()
                 )

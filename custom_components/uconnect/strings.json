@@ -34,7 +34,11 @@
                 "data": {
                     "scan_interval": "Poll interval (minutes)",
                     "pin": "Security PIN (leave blank to use initial value)",
-                    "add_command_entities": "Add command entities (Button / Lock / Switch / Select)"
+                    "add_command_entities": "Add command entities (Button / Lock / Switch / Select)",
+                    "log_level": "Log level"
+                },
+                "data_description": {
+                    "log_level": "Changing the log level will reload the integration."
                 }
             }
         }

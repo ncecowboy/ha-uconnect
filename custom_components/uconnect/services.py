@@ -168,15 +168,22 @@ def _get_vin_from_device(hass: HomeAssistant, call: ServiceCall) -> str:
         if len(vehicles) == 1:
             return list(vehicles.keys())[0]
 
-    device_entry = device_registry.async_get(hass).async_get(call.data[ATTR_DEVICE_ID])
+    device_id = call.data.get(ATTR_DEVICE_ID)
+    if device_id is None:
+        raise HomeAssistantError(
+            "device_id is required when multiple UConnect accounts or vehicles are "
+            "configured. Please specify the target device for this service call."
+        )
+
+    device_entry = device_registry.async_get(hass).async_get(device_id)
     if device_entry is None:
-        raise ValueError(f"Device not found: {call.data.get(ATTR_DEVICE_ID)}")
+        raise HomeAssistantError(f"Device not found: {device_id}")
 
     for entry in device_entry.identifiers:
         if entry[0] == DOMAIN:
             return entry[1]
 
-    raise ValueError(f"No VIN found for device: {call.data.get(ATTR_DEVICE_ID)}")
+    raise HomeAssistantError(f"No VIN found for device: {device_id}")
 
 
 def _get_coordinator_from_device(
@@ -188,9 +195,16 @@ def _get_coordinator_from_device(
     if len(coordinators) == 1:
         return hass.data[DOMAIN][coordinators[0]]
 
-    device_entry = device_registry.async_get(hass).async_get(call.data[ATTR_DEVICE_ID])
+    device_id = call.data.get(ATTR_DEVICE_ID)
+    if device_id is None:
+        raise HomeAssistantError(
+            "device_id is required when multiple UConnect accounts or vehicles are "
+            "configured. Please specify the target device for this service call."
+        )
+
+    device_entry = device_registry.async_get(hass).async_get(device_id)
     if device_entry is None:
-        raise ValueError(f"Device not found: {call.data.get(ATTR_DEVICE_ID)}")
+        raise HomeAssistantError(f"Device not found: {device_id}")
 
     config_entry_id = next(
         (
@@ -202,11 +216,11 @@ def _get_coordinator_from_device(
         None,
     )
     if config_entry_id is None:
-        raise ValueError(
-            f"No config entry found for device: {call.data.get(ATTR_DEVICE_ID)}"
+        raise HomeAssistantError(
+            f"No config entry found for device: {device_id}"
         )
 
     config_entry = hass.config_entries.async_get_entry(config_entry_id)
     if config_entry is None:
-        raise ValueError(f"Config entry not found: {config_entry_id}")
+        raise HomeAssistantError(f"Config entry not found: {config_entry_id}")
     return hass.data[DOMAIN][config_entry.unique_id]

@@ -44,7 +44,7 @@ class UconnectLockEntityDescription(LockEntityDescription):
 
 LOCK_DESCRIPTIONS: Final[tuple[UconnectLockEntityDescription, ...]] = (
     UconnectLockEntityDescription(
-        key="lock_doors",
+        key="lock_doors_lock",
         name="Doors Lock",
         icon_locked="mdi:car-door-lock",
         icon_unlocked="mdi:car-door-lock-open",

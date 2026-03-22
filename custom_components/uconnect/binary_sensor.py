@@ -66,40 +66,40 @@ SENSOR_DESCRIPTIONS: Final[tuple[UconnectBinarySensorEntityDescription, ...]] = 
         key="door_driver_locked",
         name="Door Driver",
         postprocess=lambda x: not x,
-        on_icon="mdi:car-door-lock",
-        off_icon="mdi:car-door-lock-open",
+        on_icon="mdi:car-door-lock-open",
+        off_icon="mdi:car-door-lock",
         device_class=BinarySensorDeviceClass.LOCK,
     ),
     UconnectBinarySensorEntityDescription(
         key="door_passenger_locked",
         name="Door Passenger",
         postprocess=lambda x: not x,
-        on_icon="mdi:car-door-lock",
-        off_icon="mdi:car-door-lock-open",
+        on_icon="mdi:car-door-lock-open",
+        off_icon="mdi:car-door-lock",
         device_class=BinarySensorDeviceClass.LOCK,
     ),
     UconnectBinarySensorEntityDescription(
         key="door_rear_left_locked",
         name="Door Rear Left",
         postprocess=lambda x: not x,
-        on_icon="mdi:car-door-lock",
-        off_icon="mdi:car-door-lock-open",
+        on_icon="mdi:car-door-lock-open",
+        off_icon="mdi:car-door-lock",
         device_class=BinarySensorDeviceClass.LOCK,
     ),
     UconnectBinarySensorEntityDescription(
         key="door_rear_right_locked",
         name="Door Rear Right",
         postprocess=lambda x: not x,
-        on_icon="mdi:car-door-lock",
-        off_icon="mdi:car-door-lock-open",
+        on_icon="mdi:car-door-lock-open",
+        off_icon="mdi:car-door-lock",
         device_class=BinarySensorDeviceClass.LOCK,
     ),
     UconnectBinarySensorEntityDescription(
         key="trunk_locked",
         name="Trunk",
         postprocess=lambda x: not x,
-        on_icon="mdi:lock",
-        off_icon="mdi:lock-open",
+        on_icon="mdi:lock-open",
+        off_icon="mdi:lock",
         device_class=BinarySensorDeviceClass.LOCK,
     ),
     # ── Windows ───────────────────────────────────────────────────────────────
@@ -205,7 +205,7 @@ class UconnectBinarySensor(BinarySensorEntity, UconnectEntity):
         vehicle: Vehicle,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, vehicle)
+        UconnectEntity.__init__(self, coordinator, vehicle)
         self.key = description.key
         self.postprocess = description.postprocess
         self.entity_description: UconnectBinarySensorEntityDescription = description

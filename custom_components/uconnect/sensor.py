@@ -256,7 +256,7 @@ class UconnectSensor(SensorEntity, UconnectEntity):
         vehicle: Vehicle,
     ):
         """Initialize the sensor."""
-        super().__init__(coordinator, vehicle)
+        UconnectEntity.__init__(self, coordinator, vehicle)
 
         self._description: UconnectSensorEntityDescription = description
         self._key = self._description.key

@@ -23,7 +23,7 @@ PLATFORMS: list[str] = [
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
-async def async_setup(hass: HomeAssistant, config_entry: ConfigEntry):
+async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the UConnect integration (YAML config not supported)."""
     return True
 

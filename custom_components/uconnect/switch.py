@@ -100,7 +100,7 @@ SWITCH_DESCRIPTIONS: Final[tuple[UconnectSwitchEntityDescription, ...]] = (
         device_class=SwitchDeviceClass.SWITCH,
     ),
     UconnectSwitchEntityDescription(
-        key="lock_doors",
+        key="switch_doors_lock",
         name="Doors Lock",
         on_icon="mdi:car-door-lock",
         off_icon="mdi:car-door-lock-open",

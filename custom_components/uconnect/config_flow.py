@@ -52,7 +52,7 @@ OPTIONS_SCHEMA = vol.Schema(
             default=DEFAULT_SCAN_INTERVAL,
         ): vol.All(vol.Coerce(int), vol.Range(min=1, max=999)),
         vol.Optional(CONF_PIN, default=DEFAULT_PIN): str,
-        vol.Required(CONF_ADD_COMMAND_ENTITIES): bool,
+        vol.Required(CONF_ADD_COMMAND_ENTITIES, default=False): bool,
     }
 )
 
@@ -78,6 +78,11 @@ async def validate_input(hass: HomeAssistant, user_input: dict[str, Any]):
 class UconnectOptionFlowHandler(config_entries.OptionsFlow):
     """Handle options flow for UConnect."""
 
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize options flow."""
+        super().__init__()
+        self._config_entry = config_entry
+
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -85,12 +90,12 @@ class UconnectOptionFlowHandler(config_entries.OptionsFlow):
 
         if user_input is not None:
             return self.async_create_entry(
-                title=self.config_entry.title, data=user_input
+                title=self._config_entry.title, data=user_input
             )
 
         return self.async_show_form(
             data_schema=self.add_suggested_values_to_schema(
-                OPTIONS_SCHEMA, self.config_entry.options
+                OPTIONS_SCHEMA, self._config_entry.options
             ),
         )
 
@@ -105,7 +110,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(config_entry: ConfigEntry):
         """Return the options flow handler."""
-        return UconnectOptionFlowHandler()
+        return UconnectOptionFlowHandler(config_entry)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

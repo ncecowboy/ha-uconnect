@@ -4,22 +4,23 @@
 [![GitHub Release](https://img.shields.io/github/release/ncecowboy/ha-uconnect.svg)](https://github.com/ncecowboy/ha-uconnect/releases)
 [![License](https://img.shields.io/github/license/ncecowboy/ha-uconnect.svg)](LICENSE)
 
-A [Home Assistant](https://www.home-assistant.io/) custom integration for **Stellantis vehicles** (Jeep, RAM, Dodge, Chrysler, Fiat, Alfa Romeo, Maserati) equipped with the **T-Mobile UConnect** telematics dongle. It polls the UConnect cloud API to expose vehicle telemetry as Home Assistant entities and supports remote commands where the vehicle hardware allows.
+A [Home Assistant](https://www.home-assistant.io/) custom integration for **Stellantis vehicles** (Jeep, RAM, Dodge, Chrysler, Fiat, Alfa Romeo, Maserati) that communicate through the **UConnect cloud API**. It is compatible with **both** factory-installed 4G telematics modules **and** the [T-Mobile 4G OBD Adapter](#t-mobile-4g-obd-adapter-compatibility) — the aftermarket OBD-II dongle that re-enables UConnect connected services for vehicles originally equipped with 3G modems.
 
-> **Note:** This integration requires an active UConnect account and a vehicle with T-Mobile connectivity (UConnect dongle).  
-> It does **not** support SiriusXM Guardian (older Mopar system).
+> **Note:** This integration requires an active UConnect account. It works with any hardware that routes through the UConnect cloud — including the T-Mobile 4G OBD Adapter.  
+> It does **not** support the older SiriusXM Guardian (Mopar 3G) system.
 
 ---
 
 ## Table of Contents
 
 1. [Features](#features)
-2. [Supported Brands & Regions](#supported-brands--regions)
-3. [Requirements](#requirements)
-4. [Installation via HACS](#installation-via-hacs)
-5. [Manual Installation](#manual-installation)
-6. [Configuration](#configuration)
-7. [Entities](#entities)
+2. [T-Mobile 4G OBD Adapter Compatibility](#t-mobile-4g-obd-adapter-compatibility)
+3. [Supported Brands & Regions](#supported-brands--regions)
+4. [Requirements](#requirements)
+5. [Installation via HACS](#installation-via-hacs)
+6. [Manual Installation](#manual-installation)
+7. [Configuration](#configuration)
+8. [Entities](#entities)
    - [Sensors](#sensors)
    - [Binary Sensors](#binary-sensors)
    - [Device Tracker](#device-tracker)
@@ -27,13 +28,13 @@ A [Home Assistant](https://www.home-assistant.io/) custom integration for **Stel
    - [Switches](#switches)
    - [Buttons](#buttons)
    - [Select](#select)
-8. [Services](#services)
-9. [API Data Model](#api-data-model)
-10. [Advanced: Extrapolated Battery SOC](#advanced-extrapolated-battery-soc)
-11. [Options](#options)
-12. [Troubleshooting](#troubleshooting)
-13. [Contributing](#contributing)
-14. [License](#license)
+9. [Services](#services)
+10. [API Data Model](#api-data-model)
+11. [Advanced: Extrapolated Battery SOC](#advanced-extrapolated-battery-soc)
+12. [Options](#options)
+13. [Troubleshooting](#troubleshooting)
+14. [Contributing](#contributing)
+15. [License](#license)
 
 ---
 
@@ -50,38 +51,123 @@ A [Home Assistant](https://www.home-assistant.io/) custom integration for **Stel
 
 ---
 
+## T-Mobile 4G OBD Adapter Compatibility
+
+### ✅ Yes — This Integration Works with the T-Mobile 4G OBD Adapter
+
+The T-Mobile 4G OBD Adapter is an aftermarket OBD-II dongle designed for Stellantis vehicles that originally shipped with 3G UConnect modems. When the 3G network was sunset, the OBD adapter allowed these vehicles to continue using connected services via T-Mobile's 4G LTE network.
+
+**This integration is fully compatible with the OBD adapter.** Here's why:
+
+- The OBD adapter connects to T-Mobile's 4G LTE network and forwards all vehicle data and commands through the **same Stellantis UConnect cloud API** used by factory-installed modems and the official Uconnect mobile app.
+- This integration uses the [`py-uconnect`](https://github.com/hass-uconnect/py-uconnect) library to communicate with that same UConnect cloud — so whether your vehicle's cellular connectivity comes from a factory module or the T-Mobile OBD adapter, the integration works identically.
+
+```
+Vehicle CAN-Bus
+    │
+    └─► T-Mobile 4G OBD Adapter (OBD-II port)
+              │ 4G LTE
+              ▼
+        T-Mobile Network
+              │
+              ▼
+      UConnect Cloud API  ◄─── This integration (py-uconnect)
+              │
+              ▼
+        Uconnect App (official)
+```
+
+### Supported Vehicle Models and Years
+
+The T-Mobile 4G OBD Adapter targets Stellantis vehicles originally equipped with UConnect Access (3G). The following models are commonly supported:
+
+| Brand | Model | Years |
+|-------|-------|-------|
+| **Jeep** | Grand Cherokee (WK2) | 2014–2021 |
+| **Jeep** | Cherokee (KL) | 2015–2023 |
+| **Jeep** | Wrangler (JK) | 2015–2018 |
+| **Jeep** | Wrangler (JL / JLU) | 2018–2023 |
+| **Jeep** | Compass (MP) | 2017–2023 |
+| **Jeep** | Renegade (BU) | 2015–2023 |
+| **Jeep** | Gladiator (JT) | 2020–2023 |
+| **Ram** | 1500 Classic (DS) | 2013–2022 |
+| **Ram** | 1500 (DT) | 2019–2023 |
+| **Ram** | 2500 / 3500 | 2013–2023 |
+| **Dodge** | Charger | 2015–2023 |
+| **Dodge** | Challenger | 2015–2023 |
+| **Dodge** | Durango | 2015–2023 |
+| **Chrysler** | 300 | 2015–2023 |
+| **Chrysler** | Pacifica / Pacifica Hybrid | 2017–2023 |
+| **Chrysler** | Voyager | 2020–2023 |
+
+> **Note:** Exact eligibility depends on your vehicle's specific Uconnect hardware version and trim level. Vehicles must have UConnect Access (or equivalent) and an active UConnect subscription. Use your VIN at [driveuconnect.com](https://www.driveuconnect.com/) to confirm eligibility.
+
+### Feature Availability with the OBD Adapter
+
+All features this integration provides are supported through the OBD adapter with one exception:
+
+| Feature | OBD Adapter Support |
+|---------|-------------------|
+| Vehicle telemetry (odometer, range, tire pressure, fuel, etc.) | ✅ Full support |
+| Door / window / ignition status | ✅ Full support |
+| GPS location tracking | ✅ Full support |
+| Remote lock / unlock | ✅ Full support (PIN required) |
+| Remote engine start / stop | ✅ Full support (PIN required, if vehicle equipped) |
+| HVAC / preconditioning | ✅ Full support (PIN required, if vehicle equipped) |
+| Lights / horn | ✅ Full support |
+| EV / PHEV charging controls | ✅ Full support (if vehicle equipped) |
+| In-dash SOS / 911 emergency call | ❌ Not supported (requires factory head-unit modem) |
+| In-dash navigation "Send & Go" | ❌ Not supported (requires factory head-unit modem) |
+
+### OBD Adapter Setup (Outside This Integration)
+
+Before using this integration, your OBD adapter must already be activated and working with the official Uconnect app:
+
+1. Plug the T-Mobile 4G OBD Adapter into the OBD-II port (under the dashboard, driver's side).
+2. Turn the ignition to **Run/On** (engine does not need to start).
+3. Wait up to **15 minutes** for the adapter LED to turn solid green — this confirms 4G activation.
+4. Confirm the adapter is working by opening the official **Uconnect app** and verifying vehicle status appears.
+5. Once working in the Uconnect app, configure this Home Assistant integration using the same account credentials.
+
+---
+
 ## Supported Brands & Regions
 
-| # | Brand | Region |
-|---|-------|--------|
-| 1 | Fiat | EU |
-| 2 | Fiat | US |
-| 3 | RAM | US |
-| 4 | Dodge | US |
-| 5 | Jeep | EU |
-| 6 | Jeep | US ✅ (primary T-Mobile target) |
-| 7 | Maserati | Asia |
-| 8 | Maserati | EU |
-| 9 | Maserati | US / Canada |
-| 10 | Chrysler | Canada |
-| 11 | Chrysler | US |
-| 12 | Alfa Romeo | Asia |
-| 13 | Alfa Romeo | EU |
-| 14 | Alfa Romeo | US / Canada |
-| 15 | Fiat | Asia |
-| 16 | Fiat | Canada |
-| 17 | Jeep | Asia |
+The brands and regions below correspond to the UConnect cloud API endpoints used by the `py-uconnect` library. Select the entry that matches your vehicle's brand and the country where it was sold.
 
-> Brands marked ✅ are most commonly used with the T-Mobile UConnect dongle.  
-> Other brands are supported but may have limited testing.
+| # | Brand | Region | T-Mobile OBD Adapter |
+|---|-------|--------|----------------------|
+| 1 | Fiat | EU | — |
+| 2 | Fiat | US | — |
+| 3 | RAM | US | ✅ Primary target |
+| 4 | Dodge | US | ✅ Primary target |
+| 5 | Jeep | EU | — |
+| 6 | Jeep | US | ✅ Primary target |
+| 7 | Maserati | Asia | — |
+| 8 | Maserati | EU | — |
+| 9 | Maserati | US / Canada | — |
+| 10 | Chrysler | Canada | — |
+| 11 | Chrysler | US | ✅ Primary target |
+| 12 | Alfa Romeo | Asia | — |
+| 13 | Alfa Romeo | EU | — |
+| 14 | Alfa Romeo | US / Canada | — |
+| 15 | Fiat | Asia | — |
+| 16 | Fiat | Canada | — |
+| 17 | Jeep | Asia | — |
+
+> **✅ Primary target** — these US brands are the ones the T-Mobile 4G OBD Adapter was designed for.  
+> All other brands connect to the same UConnect cloud architecture and are fully supported by the integration, but are not typically paired with the T-Mobile OBD hardware.
 
 ---
 
 ## Requirements
 
 - Home Assistant **2023.1** or newer
-- A Stellantis vehicle with an active **UConnect** (T-Mobile) subscription
+- A Stellantis vehicle with an active **UConnect** subscription, connected through one of:
+  - A **factory-installed 4G telematics module** (newer models), or
+  - The **T-Mobile 4G OBD Adapter** (older models with original 3G UConnect)
 - Your UConnect account **email**, **password**, and optionally a **security PIN**
+- The OBD adapter (if used) must already be activated and working with the official Uconnect app before setting up this integration
 - Python library: `py-uconnect==0.3.11` (installed automatically)
 
 ---
@@ -347,6 +433,34 @@ After initial setup, click **Configure** on the integration card to adjust:
 ### Extrapolated SOC is inaccurate
 - Press **Reset Battery Learning** to clear old learned rates.
 - After a few charge cycles, accuracy improves automatically.
+
+### T-Mobile 4G OBD Adapter — Specific Issues
+
+#### Adapter LED is not solid green
+- The adapter needs up to 15 minutes after first plug-in to activate on the T-Mobile network.
+- Ensure the vehicle ignition is in the **Run/On** position during activation.
+- If the LED never turns solid green, contact T-Mobile support — the SIM activation may need to be reset.
+
+#### Official Uconnect app works but this integration cannot connect
+- The integration uses the same credentials as the Uconnect app. If the app works, authentication should succeed.
+- Try logging out of the Uconnect app and back in to refresh your session, then retry the integration setup.
+- Verify you selected the correct **Brand + Region** (e.g., *Jeep US*, *RAM US*, *Dodge US*, or *Chrysler US* for OBD adapter users in the United States).
+
+#### Odometer shows incorrect values or "malfunction" alerts appear
+- This is a known issue with some OBD adapter firmware versions on certain Dodge and Ram models (particularly 2014–2016). The integration faithfully reports whatever the UConnect cloud API provides.
+- Check the T-Mobile adapter firmware version via the Uconnect app; an update may resolve the discrepancy.
+- If values are consistently wrong, compare against the vehicle's instrument cluster and report the discrepancy to T-Mobile/UConnect support.
+
+#### Vehicle data stops updating after a long idle period
+- The OBD adapter may enter a sleep/low-power state when the vehicle has been parked and off for an extended time.
+- Starting the vehicle or turning the ignition to **Run/On** will wake the adapter and trigger a data sync.
+- Use the **Update Data** button entity (if enabled) or the `uconnect.update` service to manually request a refresh after the vehicle wakes.
+
+#### Remote commands (lock, start, etc.) time out with OBD adapter
+- The OBD adapter must have cellular connectivity for remote commands to reach the vehicle.
+- Commands sent while the vehicle is in an area with poor T-Mobile coverage may fail or be delayed.
+- The adapter processes commands when the vehicle is parked with ignition off; allow up to 60 seconds for command confirmation.
+- Ensure the UConnect subscription plan includes remote services (not all plans include remote start/unlock).
 
 ---
 

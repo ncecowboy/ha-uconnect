@@ -3,12 +3,20 @@
 import logging
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_PASSWORD, CONF_PIN, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 
-from .const import BRANDS, CONF_BRAND_REGION, CONF_LOG_LEVEL, DEFAULT_LOG_LEVEL, DOMAIN
+from .const import (
+    BRANDS,
+    CONF_BRAND_REGION,
+    CONF_DISABLE_TLS_VERIFICATION,
+    CONF_LOG_LEVEL,
+    DEFAULT_LOG_LEVEL,
+    DEFAULT_PIN,
+    DOMAIN,
+)
 from .coordinator import UconnectDataUpdateCoordinator
 from .services import async_setup_services, async_unload_services
 
@@ -72,6 +80,66 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         await coordinator.async_config_entry_first_refresh()
     except Exception as e:
         raise ConfigEntryNotReady(f"Unable to connect to UConnect API: {e}") from e
+
+    # If the initial refresh succeeded but returned no vehicles, the stored brand
+    # may be stale or wrong.  Try every known brand to find one that returns
+    # vehicles and, if a better brand is found, update the config entry so all
+    # subsequent refreshes use it automatically.
+    if not coordinator.client.get_vehicles():
+        current_brand = config_entry.data.get(CONF_BRAND_REGION)
+        _LOGGER.warning(
+            "No vehicles found for brand %r. "
+            "Attempting brand auto-detection across all known brands…",
+            current_brand,
+        )
+
+        # Lazy import to avoid a circular dependency at module load time.
+        from .config_flow import _detect_brand  # noqa: PLC0415
+
+        new_brand, any_login = await _detect_brand(
+            hass,
+            email=config_entry.data.get(CONF_USERNAME, ""),
+            password=config_entry.data.get(CONF_PASSWORD, ""),
+            pin=config_entry.data.get(CONF_PIN, DEFAULT_PIN),
+            disable_tls_verification=config_entry.data.get(
+                CONF_DISABLE_TLS_VERIFICATION, False
+            ),
+        )
+
+        if new_brand and new_brand != current_brand:
+            _LOGGER.info(
+                "Brand auto-detection found vehicles under %r "
+                "(was %r). Updating config entry.",
+                new_brand,
+                current_brand,
+            )
+            hass.config_entries.async_update_entry(
+                config_entry,
+                data={**config_entry.data, CONF_BRAND_REGION: new_brand},
+            )
+            # Re-initialize the coordinator with the corrected brand.
+            # The previous coordinator was never stored in hass.data yet,
+            # so replacing the local reference here is safe.
+            coordinator = UconnectDataUpdateCoordinator(hass, config_entry)
+            try:
+                await coordinator.async_config_entry_first_refresh()
+            except Exception as e:
+                raise ConfigEntryNotReady(
+                    f"Unable to connect to UConnect API after brand update: {e}"
+                ) from e
+        elif not any_login:
+            _LOGGER.error(
+                "Login failed for all known brands. "
+                "Please check your UConnect credentials and reconfigure the integration."
+            )
+        else:
+            _LOGGER.warning(
+                "No vehicles were found for any known brand. "
+                "Your vehicle may not be registered with the UConnect service, "
+                "or your subscription may have expired. "
+                "Please verify your vehicle is registered in the UConnect (or Mopar) "
+                "app and try again."
+            )
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.unique_id] = coordinator

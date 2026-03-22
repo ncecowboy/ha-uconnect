@@ -7,17 +7,19 @@ connected-services modems that operated over the now-defunct Sprint 3G network.
 When Sprint's 3G network was retired in 2022, these vehicles lost cellular
 connectivity until owners installed the T-Mobile 4G OBD Adapter.
 
-The older UConnect Access portal (connect.ramtrucks.com, connect.dodge.com,
-connect.chrysler.com, connect.jeep.com) used *different Gigya authentication
-API keys* from the current Stellantis GSDP portal (login-us.ramtrucks.com,
-login-us.dodge.com, etc.).  Vehicles originally registered under the older
-portal's Gigya tenant may not appear when py-uconnect authenticates via the
-newer tenant — even though both ultimately route to the same GSDP back-end.
+The older UConnect Access consumer portals (connect.ramtrucks.com,
+connect.dodge.com, connect.chrysler.com, connect.jeep.com) used *different
+Gigya authentication API keys* from the current Stellantis GSDP system.
+Both the legacy and current paths use the same ``login-us.*`` Gigya login
+endpoints — the difference is the API key, which selects a different Gigya
+tenant.  Vehicles originally registered under the older tenant may not appear
+when py-uconnect authenticates with the newer API key, even though both
+ultimately route to the same GSDP back-end.
 
 This module defines ``Brand`` objects that use the older Gigya API keys so the
 brand-detection code can try them as a fallback when no vehicles are found with
-the current keys.  The API (backend) configuration is identical to the current
-brands — only the Gigya authentication key and login URL differ.
+the current keys.  The API (backend) configuration and login URL hostnames are
+identical to the current brands — only the Gigya authentication API key differs.
 
 References
 ----------
@@ -55,10 +57,12 @@ DODGE_US_LEGACY = Brand(
 )
 """Legacy Dodge US brand using the older UConnect Access Gigya API key.
 
-Used as a fallback when the current DODGE_US key returns no vehicles.  This
+Used as a fallback when the current DODGE_US key returns no vehicles.  Both
+this brand and DODGE_US use ``https://login-us.dodge.com`` as the login URL;
+the difference is the Gigya API key, which selects the legacy tenant.  This
 may succeed for 2013–2018 Dodge vehicles (Charger, Challenger, Durango) that
-were originally enrolled through the older ``connect.dodge.com`` portal and
-have since been connected via the T-Mobile 4G OBD Adapter.
+were originally enrolled through the older ``connect.dodge.com`` consumer
+portal and have since been connected via the T-Mobile 4G OBD Adapter.
 """
 
 CHRYSLER_US_LEGACY = Brand(
@@ -73,8 +77,11 @@ CHRYSLER_US_LEGACY = Brand(
 )
 """Legacy Chrysler US brand using the older UConnect Access Gigya API key.
 
-Used as a fallback for 2015–2018 Chrysler vehicles (300, Pacifica) that may
-have been originally enrolled under the older ``connect.chrysler.com`` portal.
+Used as a fallback for 2013–2018 Chrysler vehicles (300, Town & Country,
+Pacifica) that may have been originally enrolled under the older
+``connect.chrysler.com`` consumer portal.  Both this brand and CHRYSLER_US
+use ``https://login-us.chrysler.com`` as the login URL; only the Gigya API
+key differs, selecting the legacy tenant.
 """
 
 LEGACY_BRANDS: dict[str, Brand] = {

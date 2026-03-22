@@ -171,16 +171,17 @@ which used Sprint's 3G cellular network.  When Sprint's 3G network was retired i
 these vehicles lost remote connectivity unless owners installed the T-Mobile 4G OBD Adapter.
 
 The older UConnect Access platform used **different Gigya authentication API keys** from the
-current Stellantis GSDP system:
+current Stellantis GSDP system.  Both use the same `login-us.*` login endpoints — but the
+keys map to separate Gigya tenants:
 
-| Era | Login Domain | Gigya Tenant |
-|-----|-------------|--------------|
-| **UConnect Access (2013–2018)** | `connect.ramtrucks.com`, `connect.dodge.com`, `connect.chrysler.com`, `connect.jeep.com` | Legacy — older Stellantis Gigya site |
-| **Stellantis GSDP (2019+)** | `login-us.ramtrucks.com`, `login-us.dodge.com`, etc. | Current — modern GSDP platform |
+| Era | Login Domain(s) used by integration | Gigya Tenant |
+|-----|-------------------------------------|--------------|
+| **UConnect Access (2013–2018, legacy fallback)** | `login-us.dodge.com`, `login-us.chrysler.com`, etc. (legacy API keys) | Legacy — older Stellantis Gigya site |
+| **Stellantis GSDP (2019+)** | `login-us.ramtrucks.com`, `login-us.dodge.com`, etc. (current API keys) | Current — modern GSDP platform |
 
-Because these are separate Gigya tenants, a vehicle enrolled on the legacy portal may
-not appear when the integration authenticates via the newer GSDP Gigya tenant — even
-if login succeeds.
+Because these are separate Gigya tenants (even though they share the same `login-us.*`
+hostnames), a vehicle enrolled on the legacy tenant may not appear when the integration
+authenticates via the newer GSDP Gigya API key — even if login succeeds.
 
 ### Automatic Legacy Detection
 
@@ -192,10 +193,10 @@ This integration automatically handles legacy UConnect Access vehicles by:
 
 The following legacy variants are tried automatically:
 
-| Legacy Brand | Covers | Older Portal |
-|-------------|--------|-------------|
-| `DODGE_US_LEGACY` | 2013–2018 Dodge Charger, Challenger, Durango | `connect.dodge.com` |
-| `CHRYSLER_US_LEGACY` | 2013–2018 Chrysler 300, Pacifica | `connect.chrysler.com` |
+| Legacy Brand | Covers | Login URL (legacy key) | Original Consumer Portal |
+|-------------|--------|------------------------|--------------------------|
+| `DODGE_US_LEGACY` | 2013–2018 Dodge Charger, Challenger, Durango | `login-us.dodge.com` | `connect.dodge.com` |
+| `CHRYSLER_US_LEGACY` | 2013–2018 Chrysler 300, Town & Country, Pacifica | `login-us.chrysler.com` | `connect.chrysler.com` |
 
 > **Note for Ram and Jeep owners**: The Ram and Jeep US brands use the same Gigya
 > authentication keys across both the legacy and current systems, so a separate legacy

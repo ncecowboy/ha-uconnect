@@ -56,7 +56,7 @@ DODGE_US_LEGACY = Brand(
 """Legacy Dodge US brand using the older UConnect Access Gigya API key.
 
 Used as a fallback when the current DODGE_US key returns no vehicles.  This
-may succeed for 2015–2018 Dodge vehicles (Charger, Challenger, Durango) that
+may succeed for 2013–2018 Dodge vehicles (Charger, Challenger, Durango) that
 were originally enrolled through the older ``connect.dodge.com`` portal and
 have since been connected via the T-Mobile 4G OBD Adapter.
 """
